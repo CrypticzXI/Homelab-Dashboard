@@ -107,7 +107,7 @@ TP-Link Tapo support is built for battery cameras rather than bolted on:
 
 | Guide | What's in it |
 |---|---|
-| [**Widgets**](docs/widgets.md) | Every widget type, what it needs, and notes on the clever ones |
+| [**Widgets**](docs/widgets.md) | Every widget type, what it needs, and notes on the clever ones, I've not tested all of them (they SHOULD work, if not leave a github issue) |
 | [**Installation**](docs/install.md) | Installer, GHCR image, `docker run`, boot start, updating, troubleshooting |
 | [**Configuration**](docs/configuration.md) | Environment variables, sockets, themes, alerts, HTTPS, backup |
 | [**Cameras**](docs/cameras.md) | Tapo setup, the Third-Party Compatibility switch, battery behaviour |
