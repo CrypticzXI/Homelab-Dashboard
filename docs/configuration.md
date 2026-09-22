@@ -20,6 +20,8 @@ All configuration lives in `.env` (see [`.env.example`](../.env.example)).
 
 Changing `.env` needs a restart: `docker compose up -d`.
 
+The compose file reads every one of these from `.env`, so it rarely needs editing itself. Building from source? Use `docker-compose.build.yml` instead — same variables.
+
 ## Container socket
 
 | Engine | `CONTAINER_SOCKET` | Enable first |

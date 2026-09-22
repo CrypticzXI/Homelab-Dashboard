@@ -1,0 +1,32 @@
+# One container: nginx + API + Tapo bridge + go2rtc. Works with `docker compose`
+# and `podman compose` / `podman-compose`.
+services:
+  dashboard:
+    build: .
+    image: homelab-dashboard
+    container_name: homelab-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASH_PORT:-8080}:80"
+    environment:
+      DASH_USER: ${DASH_USER:-admin}
+      DASH_PASSWORD: ${DASH_PASSWORD:-change-me}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      # "localhost" in a widget URL is rewritten to this hostname (the machine running the container)
+      HOST_ALIAS: ${HOST_ALIAS:-host.docker.internal}
+      # Optional: raises GitHub API limits for bookmark repo stats
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      TZ: ${TZ:-UTC}
+      # Accept self-signed certificates on services you add (Proxmox, TrueNAS, UniFi…). Set false to require valid certs.
+      ALLOW_SELF_SIGNED: ${ALLOW_SELF_SIGNED:-true}
+    volumes:
+      - ./data:/data
+      # Docker or Podman API socket for the Docker widget (see .env.example for Podman paths)
+      - ${CONTAINER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
+      # Host root, read-only, so the Server widget can report host disks / hostname
+      - /:/host:ro
+    # Needed on SELinux hosts (Fedora/RHEL) for the socket and /host mounts; Docker ignores it.
+    security_opt:
+      - label=disable
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

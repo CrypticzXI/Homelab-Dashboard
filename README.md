@@ -4,8 +4,8 @@
 
 **One login, one container, every service in your homelab — live.**
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
-[![Build & publish image](https://github.com/OWNER/REPO/actions/workflows/release.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/release.yml)
+[![CI](https://github.com/CrypticzXI/Homelab-Dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/CrypticzXI/Homelab-Dashboard/actions/workflows/ci.yml)
+[![Build & publish image](https://github.com/CrypticzXI/Homelab-Dashboard/actions/workflows/release.yml/badge.svg)](https://github.com/CrypticzXI/Homelab-Dashboard/actions/workflows/release.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 <img src="docs/img/dashboard.webp" alt="Homelab Dashboard" width="920">
@@ -60,12 +60,22 @@ Most homelab dashboards are a grid of bookmarks that can't tell you whether anyt
 ## Quick start
 
 ```bash
-tar xzf homelab-dashboard-*.tar.gz -C ~/homelab-dashboard
-cd ~/homelab-dashboard
-./install.sh
+mkdir -p ~/homelab-dashboard && cd ~/homelab-dashboard
+curl -fsSLO https://raw.githubusercontent.com/CrypticzXI/Homelab-Dashboard/main/docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/CrypticzXI/Homelab-Dashboard/main/.env.example -o .env
+nano .env                 # set DASH_PASSWORD at least
+docker compose up -d      # or: podman compose up -d
 ```
 
-The installer finds Docker or Podman, locates the container socket, asks for a username, password and port, builds the image and prints your URL. Prefer the pre-built GHCR image, plain `docker run`, or compose by hand? [**Installation →**](docs/install.md)
+That pulls the published image — multi-arch, so it works on a Pi too:
+
+```
+ghcr.io/crypticzxi/homelab-dashboard:latest
+```
+
+Then open `http://<server>:8080`, sign in and click **Edit**.
+
+Prefer a guided setup, `docker run`, or building from source? [**Installation →**](docs/install.md)
 
 ---
 

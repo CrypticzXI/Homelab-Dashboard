@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Homelab Dashboard installer for Linux servers.
-#   ./install.sh            interactive first-time setup, then build + start
-#   ./install.sh --update   rebuild and restart with the existing .env
+#   ./install.sh             first-time setup, then pull the published image and start
+#   ./install.sh --build     build from source instead of pulling
+#   ./install.sh --update    pull (or rebuild) and restart with the existing .env
+#   ./install.sh --systemd   also install a systemd user service (Podman)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -11,7 +13,19 @@ warn() { printf '\033[33m  ! %s\033[0m\n' "$*"; }
 die()  { printf '\033[31m  ✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
 UPDATE=0
-[[ "${1:-}" == "--update" ]] && UPDATE=1
+BUILD=0
+SYSTEMD=0
+for arg in "$@"; do
+  case "$arg" in
+    --update) UPDATE=1 ;;
+    --build) BUILD=1 ;;
+    --systemd) SYSTEMD=1 ;;
+    -h|--help) sed -n '2,6p' "$0" | sed 's/^# \?//'; exit 0 ;;
+    *) die "Unknown option: $arg" ;;
+  esac
+done
+COMPOSE_FILE=docker-compose.yml
+[[ $BUILD -eq 1 ]] && COMPOSE_FILE=docker-compose.build.yml
 
 bold "Homelab Dashboard installer"
 
@@ -100,10 +114,20 @@ mkdir -p data
 # Rootless Podman maps container root to your user; make sure /data is writable either way.
 chmod 777 data 2>/dev/null || true
 
-bold "Building (first build takes a few minutes: go2rtc + pytapo + the web app)"
-"${COMPOSE[@]}" build
+if [[ $BUILD -eq 1 ]]; then
+  bold "Building from source (a few minutes: go2rtc + pytapo + the web app)"
+  "${COMPOSE[@]}" -f "$COMPOSE_FILE" build
+else
+  bold "Pulling ${IMAGE:-ghcr.io/crypticzxi/homelab-dashboard:latest}"
+  if ! "${COMPOSE[@]}" -f "$COMPOSE_FILE" pull; then
+    warn "Pull failed. If the package is private, log in first:"
+    warn "  echo \$GITHUB_TOKEN | $ENGINE login ghcr.io -u <your-github-user> --password-stdin"
+    warn "Or build from source instead:  ./install.sh --build"
+    exit 1
+  fi
+fi
 bold "Starting"
-"${COMPOSE[@]}" up -d
+"${COMPOSE[@]}" -f "$COMPOSE_FILE" up -d
 
 IP=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')
 bold "URL      http://${IP:-localhost}:${DASH_PORT:-8080}"
@@ -128,10 +152,11 @@ fi
 cat <<EOF
 
   Useful commands
-    ${COMPOSE[*]} logs -f          follow logs
-    ${COMPOSE[*]} restart          restart
-    ${COMPOSE[*]} down             stop
-    ./install.sh --update          rebuild after changing code
+    ${COMPOSE[*]} logs -f              follow logs
+    ${COMPOSE[*]} restart              restart
+    ${COMPOSE[*]} down                 stop
+    ./install.sh --update              pull the latest image and restart
+    ./install.sh --update --build      rebuild from source and restart
 
   Start on boot
     Docker : already handled (restart: unless-stopped)
@@ -139,7 +164,7 @@ cat <<EOF
 EOF
 
 # ---------- optional: podman user service ----------
-if [[ "${1:-}" == "--systemd" || "${2:-}" == "--systemd" ]]; then
+if [[ $SYSTEMD -eq 1 ]]; then
   UNIT="$HOME/.config/systemd/user/homelab-dashboard.service"
   mkdir -p "$(dirname "$UNIT")"
   cat > "$UNIT" <<EOF
@@ -152,8 +177,8 @@ Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$(pwd)
 EnvironmentFile=$(pwd)/.env
-ExecStart=$(command -v ${COMPOSE[0]}) ${COMPOSE[*]:1} up -d
-ExecStop=$(command -v ${COMPOSE[0]}) ${COMPOSE[*]:1} down
+ExecStart=$(command -v ${COMPOSE[0]}) ${COMPOSE[*]:1} -f $(pwd)/$COMPOSE_FILE up -d
+ExecStop=$(command -v ${COMPOSE[0]}) ${COMPOSE[*]:1} -f $(pwd)/$COMPOSE_FILE down
 TimeoutStartSec=0
 
 [Install]

@@ -18,6 +18,8 @@
 
 ```
 Dockerfile          single image, multi-stage (web build → API deps → runtime)
+docker-compose.yml       runs the published GHCR image
+docker-compose.build.yml builds from this checkout
 supervisord.conf    the four processes
 install.sh          Linux installer / updater
 api/
@@ -106,6 +108,23 @@ Then add the type id to a category in `CATEGORIES` (`web/src/widgets/index.jsx`)
 - Throw with a human sentence — it's shown on the card. `describeFetchError()` turns Node's `fetch failed` into "Connection refused by host:port".
 - Prefer degrading over failing: if one sub-request fails, return what you have and put the problem in `note` or a warning line.
 - Anything that hits a rate limit or a sleeping device should be cached generously.
+
+## Building and publishing
+
+```bash
+docker compose -f docker-compose.build.yml build
+docker compose -f docker-compose.build.yml up -d
+```
+
+Pushing to `main` builds and publishes `ghcr.io/crypticzxi/homelab-dashboard:latest` for amd64 and arm64. Tagging a release publishes the version tags too:
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+> New GHCR packages are **private by default**. After the first successful publish, make it public at
+> *github.com/users/CrypticzXI/packages/container/homelab-dashboard/settings → Change visibility*,
+> otherwise pulls need `docker login ghcr.io`.
 
 ## CI
 

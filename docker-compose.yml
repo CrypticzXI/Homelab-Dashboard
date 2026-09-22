@@ -1,9 +1,13 @@
-# One container: nginx + API + Tapo bridge + go2rtc. Works with `docker compose`
-# and `podman compose` / `podman-compose`.
+# Homelab Dashboard — runs the pre-built image from GHCR.
+#
+#   cp .env.example .env
+#   docker compose up -d           (or: podman compose up -d)
+#
+# Build from source instead:  docker compose -f docker-compose.build.yml up -d --build
+# Pin a version:              IMAGE=ghcr.io/crypticzxi/homelab-dashboard:v1.0.0
 services:
   dashboard:
-    build: .
-    image: homelab-dashboard
+    image: ${IMAGE:-ghcr.io/crypticzxi/homelab-dashboard:latest}
     container_name: homelab-dashboard
     restart: unless-stopped
     ports:
@@ -12,20 +16,21 @@ services:
       DASH_USER: ${DASH_USER:-admin}
       DASH_PASSWORD: ${DASH_PASSWORD:-change-me}
       SESSION_SECRET: ${SESSION_SECRET:-}
-      # "localhost" in a widget URL is rewritten to this hostname (the machine running the container)
+      # "localhost" in a widget URL is rewritten to this host
       HOST_ALIAS: ${HOST_ALIAS:-host.docker.internal}
+      # Accept self-signed certs on the services you add (Proxmox, TrueNAS, UniFi…)
+      ALLOW_SELF_SIGNED: ${ALLOW_SELF_SIGNED:-true}
       # Optional: raises GitHub API limits for bookmark repo stats
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       TZ: ${TZ:-UTC}
-      # Accept self-signed certificates on services you add (Proxmox, TrueNAS, UniFi…). Set false to require valid certs.
-      ALLOW_SELF_SIGNED: ${ALLOW_SELF_SIGNED:-true}
     volumes:
+      # dashboard config, uploads, uptime history, camera photos — back this up
       - ./data:/data
-      # Docker or Podman API socket for the Docker widget (see .env.example for Podman paths)
+      # Docker or Podman API socket for the Docker widget (see .env.example)
       - ${CONTAINER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
-      # Host root, read-only, so the Server widget can report host disks / hostname
+      # host filesystem, read-only, so the Server widget reports real disks
       - /:/host:ro
-    # Needed on SELinux hosts (Fedora/RHEL) for the socket and /host mounts; Docker ignores it.
+    # Needed on SELinux hosts (Fedora/RHEL); Docker ignores it.
     security_opt:
       - label=disable
     extra_hosts:
