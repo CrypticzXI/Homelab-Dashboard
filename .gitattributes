@@ -1,2 +1,17 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Files that must keep LF endings even when checked out on Windows,
+# otherwise they break inside the Linux container / on the server.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.conf text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.py text eol=lf
+
+# Binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.tar.gz binary

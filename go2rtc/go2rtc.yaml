@@ -1,0 +1,8 @@
+# Template only. go2rtc rewrites its config when streams are registered, so the
+# container copies this to a runtime path at startup and never writes here.
+# Camera streams are registered by the dashboard API at runtime (tapo://…),
+# which keeps credentials out of the repo and out of the image.
+api:
+  listen: ":1984"
+log:
+  level: info

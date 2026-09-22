@@ -1,0 +1,35 @@
+# dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# runtime state: dashboard config (contains API keys), uploads, uptime history,
+# camera event photos, session secret
+data/*
+!data/.gitkeep
+
+# local configuration & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# go2rtc rewrites its config at runtime with camera credentials — never commit
+go2rtc/go2rtc.local.yaml
+**/go2rtc.runtime.yaml
+
+# packaging artefacts
+*.tar.gz
+*.zip
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# agent workspace
+.claude/
